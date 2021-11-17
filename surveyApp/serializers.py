@@ -72,3 +72,19 @@ class AnswerSerializer(serializers.ModelSerializer):
             setattr(instance, key, value)
         instance.save()
         return instance
+
+    def validate(self, attrs):
+        question_type = Question.objects.get(
+            id=attrs['question'].id).question_type
+        try:
+            if question_type == "one" or question_type == "text":
+                obj = Answer.objects.get(question=attrs['question'].id, survey=attrs['survey'],
+                                         user_id=attrs['user_id'])
+            elif question_type == "multiple":
+                obj = Answer.objects.get(question=attrs['question'].id, survey=attrs['survey'],
+                                         user_id=attrs['user_id'],
+                                         choice=attrs['choice'])
+        except Answer.DoesNotExist:
+            return attrs
+        else:
+            raise serializers.ValidationError('Уже ответил')
